@@ -2,7 +2,7 @@
 /* Date         Programmer       Description			            */
 /* 03/05/21	Aaron Carr       Initial Deployment of disk_inventory       */
 /* 03/12/21     Aaron Carr       Moved project three to project 2           */
-/*                                                                          */
+/* 03/19/21	Aaron Carr     	 Project 4 Reports                          */
 /*                                                                          */
 
 --create db
@@ -21,11 +21,6 @@ IF SUSER_ID('diskUserAC') IS NULL CREATE LOGIN diskUserAC WITH PASSWORD = 'Pa$$w
 CREATE USER diskUserAC;
 ALTER ROLE db_datareader ADD MEMBER diskUserAC;
 Go
-
-
-
-
-
 
 CREATE TABLE artist_type
 	(
@@ -103,7 +98,7 @@ CREATE TABLE disc_has_artist
 
 
 
-INSERT INTO [dbo].[ArtistType]
+INSERT INTO [dbo].[artist_type]
            ([description])
      VALUES
            ('Solo'),
@@ -112,14 +107,13 @@ GO
 
 
 
-INSERT INTO [dbo].[DiskType]
+INSERT INTO [dbo].[disc_type]
            ([description])
      VALUES
            ('Cassette'),
 		   ('CD'),
 		   ('DVD'),
 		   ('Vinyl')
-
 GO
 
 
@@ -368,26 +362,29 @@ INSERT INTO [dbo].[disc_has_artist]
            ([disc_id]
            ,[artist_id])
 VALUES
-	(1,1)    --1
-	,(2,1)   --2
-	,(3,6)   --3
-	,(4,7)   --4
-	,(5,9)   --5
-	,(6,11)  --6
-	,(7,11)	 --7
-	,(8,11)	 --8
-	,(9,14)	 --9
-	,(10,14) --10
-	,(11,21) --11
-	,(12,21) --12
-	,(13,21) --13
-	,(14,21) --14
-	,(15,21) --15
-	,(16,13) --16
-	,(17,13) --17
-	,(18,13) --18
-	,(19,13) --19
-	,(20,8); --20
+	(1,1),
+			(2,2),
+			(3,3),
+			(4,4),
+			(5,5),
+			(6,6),
+			(7,7),
+			(8,8),
+			(9,9),
+			(10,10),
+			(11,11),
+			(12,12),
+			(13,13),
+			(14,14),
+			(15,15),
+			(16,16),
+			(17,17),
+			(18,18),
+			(19,19),
+			(20,20),
+			(21,14), 
+			(22,21), 
+			(22,22);
 
 
 SELECT *
@@ -398,3 +395,68 @@ select borrower_id as Borrower_id, disc_id as Disc_id, convert(varchar, borrowed
 from disc_has_borrower
 where returned_date IS NULL;
 go
+
+
+--Project 4
+
+--3.
+SELECT disc_name AS 'Disc Name',
+CONVERT(VARCHAR, release_date, 101) AS 'Release Date',
+fname as 'Artist first name', lname AS 'Artist last name'
+FROM disc JOIN disc_has_artist ON disc.disc_id = disc_has_artist.disc_id
+JOIN artist ON disc_has_artist.artist_id = artist.artist_id
+WHERE artist_type_id = 1
+ORDER BY lname, fname ASC;
+GO
+
+
+--4.
+CREATE VIEW View_Individual_Artist 
+AS
+SELECT artist_id, fname, lname
+FROM artist
+WHERE artist_type_id =1;
+GO
+
+SELECT fname, lname
+FROM View_Individual_Artist
+ORDER BY lname, fname;
+
+
+--5.
+SELECT disc_name AS 'Disk Name', CONVERT(VARCHAR, release_date, 101) 
+as 'Release Date', fname as 'Group Name'
+FROM disc JOIN disc_has_artist ON disc.disc_id = disc_has_artist.disc_id
+JOIN artist ON disc_has_artist.artist_id = artist.artist_id
+WHERE artist_type_id = 2
+ORDER BY fname, disc_name;
+
+
+--6.
+SELECT disc_name AS 'Disk Name', CONVERT(VARCHAR, release_date, 101) 
+as 'Release Date', fname as 'Group Name'
+FROM disc JOIN disc_has_artist ON disc.disc_id = disc_has_artist.disc_id
+JOIN artist ON disc_has_artist.artist_id = artist.artist_id
+WHERE artist.artist_id NOT IN (SELECT artist_id FROM View_Individual_Artist)
+ORDER BY fname, disc_name;
+
+
+--7.
+SELECT fname AS First, lname AS Last, disc_name AS 'Disc Name',
+CAST(borrowed_date AS DATE) AS 'Borrowed Date',CAST(returned_date AS DATE) AS 'Returned Date'
+FROM borrower JOIN disc_has_borrower ON borrower.borrower_id = disc_has_borrower.borrower_id
+JOIN disc ON disc_has_borrower.disc_id = disc.disc_id
+ORDER BY lname, fname, disc_name, borrowed_date;
+
+
+--8.
+SELECT disc.disc_id AS 'Disc ID', disc_name AS 'Disc Name'
+FROM disc JOIN disc_has_borrower ON disc.disc_id = disc_has_borrower.disc_id
+ORDER BY disc.disc_id;
+
+
+--9.
+SELECT disc_name as 'Disk Name', CAST(borrowed_date AS DATE) as 'Borrowed Date', 
+CAST(returned_date AS DATE) as 'Returned Date', lname AS 'Last Name'
+FROM disc JOIN disc_has_borrower ON disc.disc_id = disc_has_borrower.disc_id
+JOIN borrower ON borrower.borrower_id = disc_has_borrower.borrower_id
