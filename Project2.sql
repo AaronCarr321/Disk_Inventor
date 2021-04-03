@@ -3,7 +3,7 @@
 /* 03/05/21	Aaron Carr       Initial Deployment of disk_inventory       */
 /* 03/12/21     Aaron Carr       Moved project three to project 2           */
 /* 03/19/21	Aaron Carr     	 Project 4 Reports                          */
-/*                                                                          */
+/* 03/31/21     Aaron Carr       Project 5                                  */
 
 --create db
 USE master;
@@ -22,10 +22,12 @@ CREATE USER diskUserAC;
 ALTER ROLE db_datareader ADD MEMBER diskUserAC;
 Go
 
+
+
 CREATE TABLE artist_type
 	(
 	artist_type_id			INT NOT NULL PRIMARY KEY IDENTITY,
-	description				NVARCHAR(60) NOT NULL	-- char/varchar works
+	description				NVARCHAR(60) NOT NULL	
 	);
 CREATE TABLE disc_type
 	(
@@ -460,3 +462,225 @@ SELECT disc_name as 'Disk Name', CAST(borrowed_date AS DATE) as 'Borrowed Date',
 CAST(returned_date AS DATE) as 'Returned Date', lname AS 'Last Name'
 FROM disc JOIN disc_has_borrower ON disc.disc_id = disc_has_borrower.disc_id
 JOIN borrower ON borrower.borrower_id = disc_has_borrower.borrower_id
+
+
+--Project 5
+
+
+DROP PROC IF EXISTS sp_ins_artist;
+GO
+CREATE PROC sp_ins_artist @fname nvarchar(60), @lname nvarchar(60), @artist_type_id int
+AS
+BEGIN TRY
+	INSERT artist 
+	(fname, lname, artist_type_id)
+	VALUES
+	(@fname, @lname, @artist_type_id);
+END TRY
+BEGIN CATCH
+	PRINT 'An error has occurred.';
+	PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+END CATCH
+GO
+GRANT EXECUTE ON sp_ins_artist to diskUserAA;
+GO
+EXECUTE sp_ins_artist 'Karl', 'Smith', 1
+GO
+EXECUTE sp_ins_artist NULL, 'Smith', 1   
+GO
+
+
+
+
+DROP PROC IF EXISTS sp_upd_artist
+GO
+CREATE PROC sp_upd_artist @artist_id int, @fname nvarchar(60), @lname nvarchar(60), @artist_type_id int
+AS
+BEGIN TRY
+UPDATE [dbo].[artist]
+   SET [fname] = @fname
+      ,[lname] = @lname
+      ,[artist_type_id] = @artist_type_id
+WHERE artist_id = 21
+END TRY
+BEGIN CATCH
+	PRINT 'An error has occurred.';
+	PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+END CATCH
+GO
+GRANT EXECUTE ON sp_upd_artist to diskUserAA;
+GO
+EXECUTE sp_upd_artist 21, 'Karl', 'Smith2 Updated', 1
+GO
+EXECUTE sp_upd_artist 21, NULL, 'Smith', 1   
+GO
+
+
+
+
+DROP PROC IF EXISTS sp_del_artist;
+GO
+CREATE PROC sp_del_artist @artist_id int
+AS
+BEGIN TRY
+DELETE FROM [dbo].[artist]
+      WHERE artist_id = @artist_id
+END TRY	 
+BEGIN CATCH
+	PRINT 'An error has occurred.';
+	PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+END CATCH
+GO
+GRANT EXECUTE ON sp_del_artist to diskUserAA;
+GO
+EXECUTE sp_del_artist  21
+GO
+EXECUTE sp_del_artist 1          
+GO
+
+
+
+
+DROP PROC IF EXISTS sp_ins_borrower;
+GO
+CREATE PROC sp_ins_borrower @fname nvarchar(60), @lname nvarchar(60), @phone_num varchar(15)
+AS
+BEGIN TRY
+	INSERT borrower (fname, lname, phone_num)
+	VALUES ( @fname , @lname, @phone_num) 
+END TRY
+BEGIN CATCH
+	PRINT 'An error has occurred.';
+	PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+END CATCH
+GO
+GRANT EXECUTE ON sp_ins_borrower to diskUserAA;
+GO
+EXECUTE sp_ins_borrower 'Smith', 'Karl', '123-456-7890'
+GO
+EXECUTE sp_ins_borrower NULL, 'Smith', 1   
+GO
+
+
+
+
+DROP PROC IF EXISTS sp_upd_borrower;
+GO
+CREATE PROC sp_upd_borrower @borrower_id int, @fname nvarchar(60), @lname nvarchar(60), @phone_num varchar(15)
+AS
+BEGIN TRY
+UPDATE [dbo].[borrower]
+   SET [fname] = @fname
+      ,[lname] = @lname
+      ,[phone_num] = @phone_num
+ WHERE borrower_id = @borrower_id
+ END TRY
+ BEGIN CATCH
+ PRINT 'An error has occurred.';
+ PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+ END CATCH
+GO
+GRANT EXECUTE ON sp_upd_borrower to diskUserAA;
+GO
+EXECUTE sp_upd_borrower 21, 'Smith edited', 'karl', '123-456-7890'
+GO
+EXECUTE sp_upd_borrower 21,  NULL , 'Karl', '123-456-7890'   
+GO
+
+
+
+DROP PROC IF EXISTS sp_del_borrower;
+GO
+CREATE PROC sp_del_borrower @borrower_id int
+AS
+BEGIN TRY
+DELETE FROM [dbo].[borrower]
+      WHERE borrower_id = @borrower_id 
+END TRY
+BEGIN CATCH
+PRINT 'An error has occurred.';
+PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+END CATCH
+GO
+GRANT EXECUTE ON sp_del_borrower to diskUserAA;
+GO
+EXECUTE sp_del_borrower 21
+GO
+EXECUTE sp_del_borrower 1            
+GO
+
+
+
+DROP PROC IF EXISTS sp_ins_disc
+GO
+CREATE PROC sp_ins_disc
+	@disc_name nvarchar(60), @release_date date, @genre_id int, @status_id int, @disc_type_id int
+
+AS
+BEGIN TRY
+	INSERT disc 
+	(disc_name, release_date, genre_id, status_id, disc_type_id)
+	VALUES 
+	(@disc_name, @release_date, @genre_id, @status_id, @disc_type_id);
+END TRY
+BEGIN CATCH
+	PRINT 'An error has occurred.';
+	PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+END CATCH
+GO
+GRANT EXECUTE ON sp_ins_disc to diskUserAA;
+GO
+EXECUTE sp_ins_disc 'Gone Away', '5-10-2019', 1, 1, 1
+GO
+EXECUTE sp_ins_disc NULL , '5-20-2019', 1, 1, 1  
+GO
+
+
+DROP PROC IF EXISTS sp_upd_disc
+GO
+CREATE PROC sp_upd_disc
+	@disc_id int, @disc_name nvarchar(60), @release_date date, @genre_id int, @status_id int, @disc_type_id int
+
+AS
+BEGIN TRY
+UPDATE [dbo].[disc]
+   SET [disc_name] = @disc_name
+      ,[release_date] = @release_date
+      ,[genre_id] = @genre_id
+      ,[status_id] = @status_id
+      ,[disc_type_id] = @disc_type_id
+ WHERE disc_id = @disc_id;
+ END TRY
+ BEGIN CATCH
+ PRINT 'An error has occurred.';
+ PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+ END CATCH
+GO
+GRANT EXECUTE ON sp_upd_disc to diskUserAA;
+GO
+EXECUTE sp_upd_disc 22, 'Gone Away edited', '5-10-2019', 1, 3, 2
+GO
+EXECUTE sp_upd_disc 22,  NULL , '6-20-2019', 1, 1, 1  
+GO
+
+
+
+DROP PROC IF EXISTS sp_del_disc 
+GO
+CREATE PROC sp_del_disc @disc_id int
+AS
+BEGIN TRY
+DELETE FROM [dbo].[disc]
+      WHERE disc_id = @disc_id
+END TRY
+BEGIN CATCH
+ PRINT 'An error has occurred.';
+ PRINT 'Message: ' + CONVERT(VARCHAR(200), ERROR_MESSAGE());
+END CATCH
+GO
+GRANT EXECUTE ON sp_del_disc to diskUserAA;
+GO
+EXECUTE sp_del_disc 22
+GO
+EXECUTE sp_del_disc 1     
+GO
